@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>QR マーカーAR（MindAR）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- A-Frame & MindAR -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>body{margin:0;overflow:hidden;background:#000}</style>
+  <script src="./render-canvas.js"></script>
+  <script src="./data.js"></script>
+</head>
+<body>
+  <!-- MindARシーン -->
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: true; uiLoading: true"
+    embedded
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights: true, antialias: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: true"
+  >
+    <a-assets>
+      <!-- 説明テキスト用の動的キャンバス -->
+      <canvas id="textTexture" width="1024" height="512"></canvas>
+      <!-- 画像は data.js で差し替え -->
+      <img id="photoTexture" src="images/kumamoto.jpg" crossorigin="anonymous" />
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- QR画像（ターゲット）に重なるアンカー。複数ターゲットがある場合は targetIndex を変えて複製 -->
+    <a-entity mindar-image-target="targetIndex: 0" id="anchor">
+      <!-- 上：写真、下：説明板（サイズはQRに合わせて調整） -->
+      <a-entity position="0 0 0" rotation="-90 0 0" id="cardRoot">
+        <a-plane id="photoPlane" position="0 0.25 0" width="1" height="0.56"
+                 material="src: #photoTexture; transparent: true"></a-plane>
+        <a-plane id="textPlane" position="0 -0.17 0" width="1" height="0.44"
+                 material="src: #textTexture; transparent: true"></a-plane>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // URLの ?id=... で出し分け
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id') || 'kumamoto-castle';
+    const item = (window.QR_DATA || {})[id];
+
+    const photoImg   = document.getElementById('photoTexture');
+    const textCanvas = document.getElementById('textTexture');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (item?.image) photoImg.setAttribute('src', item.image);
+      if (item) {
+        renderInfoCanvas(textCanvas, {
+          title: item.title,
+          subtitle: item.subtitle,
+          description: item.description
+        });
+        document.title = `${item.title} | QRマーカーAR`;
+      }
+    });
+  </script>
+</body>
+</html>
