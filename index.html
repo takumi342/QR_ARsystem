@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AR展示</title>
+    <!-- ライブラリ（A-Frame + AR.js）-->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+    <!-- 自作スクリプト -->
+    <script src="./render-canvas.js"></script>
+    <script src="./data.js"></script>
+    <style>body{margin:0;overflow:hidden}</style>
+  </head>
+  <body>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+      <a-marker preset="hiro" id="marker">
+        <!-- 写真用プレーン -->
+        <a-plane id="photo" width="1" height="0.6"
+                 position="0 0.3 0" rotation="-90 0 0"></a-plane>
+        <!-- 説明テキスト用プレーン -->
+        <a-plane id="desc" width="1" height="0.5"
+                 position="0 -0.3 0" rotation="-90 0 0"></a-plane>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id") || "kumamoto-castle"; // デフォルトID
+      const item = (window.QR_DATA||{})[id];
+
+      if (item) {
+        const photo = document.getElementById("photo");
+        const desc = document.getElementById("desc");
+        photo.setAttribute("material", `src: ${item.image}; transparent:true;`);
+        renderTextToTexture(item, (url) => {
+          desc.setAttribute("material", `src: ${url}; transparent:true;`);
+        });
+        document.title = `${item.title} | AR展示`;
+      } else {
+        alert(`id=${id} のデータが見つかりません。data.jsを確認してください。`);
+      }
+    </script>
+  </body>
+</html>
